@@ -19,6 +19,69 @@ namespace PIWebAPI.Controllers
     {
         string pointtype;
 
+        [HttpPost]
+        [Route("points/Attributes/")]
+        public IEnumerable<Attributes> PostAttributes(Attribute Attribute)
+        {
+
+            string jwtypequery = @"SELECT *
+                                             FROM OPENQUERY([JWRTPMS], '
+                                                                        SELECT [tag], [descriptor], [pointtypex] 
+                                                                        FROM pipoint..classic 
+                                                                        WHERE [tag] LIKE ''" + Attribute.tag + "''')";
+
+            string lytypequery = @"SELECT *
+                                             FROM OPENQUERY([LYRTPMS], '
+                                                                        SELECT [tag], [descriptor], [pointtypex] 
+                                                                        FROM pipoint..classic 
+                                                                        WHERE [tag] LIKE ''" + Attribute.tag + "''')";
+
+            switch (Attribute.server.ToUpper())
+            {
+                case "JWRTPMS":
+                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                    {
+                        using (SqlCommand command = new SqlCommand(jwtypequery, connection))
+                        {
+
+                            if (connection.State == ConnectionState.Closed)
+                                connection.Open();
+
+                            using (var reader = command.ExecuteReader())
+                                return reader.Cast<IDataRecord>()
+                                    .Select(x => new Attributes()
+                                    {
+                                        tag = x.GetString(0).ToString(),
+                                        descriptor = x.IsDBNull(1) == true ? null : x.GetString(1).ToString(),
+                                        pointtype = x.IsDBNull(2) == true ? null : x.GetString(2).ToString()
+                                    }).ToList();
+
+                        }
+                    }
+
+                default:
+                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                    {
+                        using (SqlCommand command = new SqlCommand(lytypequery, connection))
+                        {
+
+                            if (connection.State == ConnectionState.Closed)
+                                connection.Open();
+
+                            using (var reader = command.ExecuteReader())
+                                return reader.Cast<IDataRecord>()
+                                    .Select(x => new Attributes()
+                                    {
+                                        tag = x.GetString(0).ToString(),
+                                        descriptor = x.IsDBNull(1) == true ? null : x.GetString(1).ToString(),
+                                        pointtype = x.IsDBNull(2) == true ? null : x.GetString(2).ToString()
+                                    }).ToList();
+
+                        }
+                    }
+            }
+
+        }
 
         [HttpPost]
         [Route("streams/Value/")]
@@ -119,14 +182,14 @@ namespace PIWebAPI.Controllers
                                         .Select(x => new ValueData
                                         {
                                             Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
                                         }).ToList();
 
                             }
                         }
                     }
 
-                case "LYRTPMS":
+                default:
                     using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                     {
                         using (SqlCommand command = new SqlCommand(lytypequery, connection))
@@ -184,30 +247,10 @@ namespace PIWebAPI.Controllers
                                         .Select(x => new ValueData()
                                         {
                                             Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
                                         }).ToList();
 
                             }
-                        }
-                    }
-
-                default:
-                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
-                    {
-                        using (SqlCommand command = new SqlCommand(jwvaluedigitalquery, connection))
-                        {
-
-                            if (connection.State == ConnectionState.Closed)
-                                connection.Open();
-
-                            using (var datareader = command.ExecuteReader())
-                                return datareader.Cast<IDataRecord>()
-                                    .Select(x => new ValueData()
-                                    {
-                                        Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                        Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
-                                    }).ToList();
-
                         }
                     }
             }
@@ -312,16 +355,16 @@ namespace PIWebAPI.Controllers
                                     return reader.Cast<IDataRecord>()
                                         .Select(x => new RecordedData()
                                         {
-                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),                              
                                             Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
                                         }).ToList();
 
                             }
                         }
-                        
+
                     }
 
-                case "LYRTPMS":
+                default:
                     using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                     {
                         using (SqlCommand command = new SqlCommand(lytypequery, connection))
@@ -384,27 +427,7 @@ namespace PIWebAPI.Controllers
 
                             }
                         }
-                        
-                    }
 
-                default:
-                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
-                    {
-                        using (SqlCommand command = new SqlCommand(jwrecordeddigitalquery, connection))
-                        {
-
-                            if (connection.State == ConnectionState.Closed)
-                                connection.Open();
-
-                            using (var datareader = command.ExecuteReader())
-                                return datareader.Cast<IDataRecord>()
-                                    .Select(x => new RecordedData()
-                                    {
-                                        Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                        Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
-                                    }).ToList();
-
-                        }
                     }
             }
 
@@ -412,6 +435,11 @@ namespace PIWebAPI.Controllers
 
     }
 
+    public class Attribute
+    {
+        public string server { get; set; }
+        public string tag { get; set; }
+    }
     public class Value
     {
         public string server { get; set; }
