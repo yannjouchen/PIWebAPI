@@ -14,11 +14,19 @@ using System.Web.Http.Description;
 
 namespace PIWebAPI.Controllers
 {
+    /// <summary>
+    /// 客製化 PI WebAPI
+    /// </summary>
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class PIDataController : ApiController
     {
         string pointtype;
 
+        /// <summary>
+        /// 取得 PI 點位屬性
+        /// </summary>
+        /// <param name="Attribute"></param>
+        /// <returns>Attributes</returns>
         [HttpPost]
         [Route("points/Attributes/")]
         public IEnumerable<Attributes> PostAttributes(Attribute Attribute)
@@ -83,6 +91,11 @@ namespace PIWebAPI.Controllers
 
         }
 
+        /// <summary>
+        /// 取得 PI 點位即時數據
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns>ValueData</returns>
         [HttpPost]
         [Route("streams/Value/")]
         public IEnumerable<ValueData> PostValue(Value Value)
@@ -257,6 +270,11 @@ namespace PIWebAPI.Controllers
 
         }
 
+        /// <summary>
+        /// 取得 PI 點位歷史數據
+        /// </summary>
+        /// <param name="Recorded"></param>
+        /// <returns>RecordedData</returns>
         [HttpPost]
         [Route("streams/Recorded/")]
         public IEnumerable<RecordedData> PostRecorded(Recorded Recorded)
@@ -355,7 +373,7 @@ namespace PIWebAPI.Controllers
                                     return reader.Cast<IDataRecord>()
                                         .Select(x => new RecordedData()
                                         {
-                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),                              
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
                                             Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
                                         }).ToList();
 
