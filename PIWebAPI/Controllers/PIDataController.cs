@@ -228,7 +228,7 @@ namespace PIWebAPI.Controllers
                     {
                         using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                         {
-                            using (SqlCommand command = new SqlCommand(jwvaluedigitalquery, connection))
+                            using (SqlCommand command = new SqlCommand(lyvaluedigitalquery, connection))
                             {
 
                                 if (connection.State == ConnectionState.Closed)
@@ -249,7 +249,7 @@ namespace PIWebAPI.Controllers
                     {
                         using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                         {
-                            using (SqlCommand command = new SqlCommand(jwvaluequery, connection))
+                            using (SqlCommand command = new SqlCommand(lyvaluequery, connection))
                             {
 
                                 if (connection.State == ConnectionState.Closed)
@@ -408,7 +408,7 @@ namespace PIWebAPI.Controllers
                     {
                         using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                         {
-                            using (SqlCommand command = new SqlCommand(jwrecordeddigitalquery, connection))
+                            using (SqlCommand command = new SqlCommand(lyrecordeddigitalquery, connection))
                             {
 
                                 if (connection.State == ConnectionState.Closed)
@@ -429,7 +429,7 @@ namespace PIWebAPI.Controllers
                     {
                         using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                         {
-                            using (SqlCommand command = new SqlCommand(jwrecordedquery, connection))
+                            using (SqlCommand command = new SqlCommand(lyrecordedquery, connection))
                             {
 
                                 if (connection.State == ConnectionState.Closed)
