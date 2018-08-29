@@ -31,6 +31,11 @@ namespace PIWebAPI.Controllers
         [Route("points/Attributes/")]
         public IEnumerable<Attributes> PostAttributes(Attribute Attribute)
         {
+            string mltypequery = @"SELECT *
+                                             FROM OPENQUERY([MLRTPMS], '
+                                                                        SELECT [tag], [descriptor], [pointtypex] 
+                                                                        FROM pipoint..classic 
+                                                                        WHERE [tag] LIKE ''" + Attribute.tag + "''')";
 
             string jwtypequery = @"SELECT *
                                              FROM OPENQUERY([JWRTPMS], '
@@ -46,6 +51,27 @@ namespace PIWebAPI.Controllers
 
             switch (Attribute.server.ToUpper())
             {
+                case "MLRTPMS":
+                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                    {
+                        using (SqlCommand command = new SqlCommand(mltypequery, connection))
+                        {
+
+                            if (connection.State == ConnectionState.Closed)
+                                connection.Open();
+
+                            using (var reader = command.ExecuteReader())
+                                return reader.Cast<IDataRecord>()
+                                    .Select(x => new Attributes()
+                                    {
+                                        tag = x.GetString(0).ToString(),
+                                        descriptor = x.IsDBNull(1) == true ? null : x.GetString(1).ToString(),
+                                        pointtype = x.IsDBNull(2) == true ? null : x.GetString(2).ToString()
+                                    }).ToList();
+
+                        }
+                    }
+
                 case "JWRTPMS":
                     using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                     {
@@ -100,6 +126,22 @@ namespace PIWebAPI.Controllers
         [Route("streams/Value/")]
         public IEnumerable<ValueData> PostValue(Value Value)
         {
+            string mltypequery = @"SELECT *
+                                             FROM OPENQUERY([MLRTPMS], '
+                                                                        SELECT [pointtypex] 
+                                                                        FROM pipoint..classic 
+                                                                        WHERE [tag] = ''" + Value.tag + "''')";
+            string mlvaluedigitalquery = @"SELECT * 
+                                                    FROM OPENQUERY([MLRTPMS], '
+                                                                                SELECT [time], DIGSTRING(status) [value]
+                                                                                FROM piarchive..picomp
+                                                                                WHERE [tag] = ''" + Value.tag + "'' AND [time] = ''*''')";
+
+            string mlvaluequery = @"SELECT * 
+                                                FROM OPENQUERY([MLRTPMS], '
+                                                                        SELECT [time], [value]
+                                                                        FROM piarchive..pisnapshot
+                                                                        WHERE[tag] = ''" + Value.tag + "''')";
 
             string jwtypequery = @"SELECT *
                                              FROM OPENQUERY([JWRTPMS], '
@@ -137,6 +179,71 @@ namespace PIWebAPI.Controllers
 
             switch (Value.server.ToUpper())
             {
+                case "MLRTPMS":
+                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                    {
+                        using (SqlCommand command = new SqlCommand(mltypequery, connection))
+                        {
+
+                            if (connection.State == ConnectionState.Closed)
+                                connection.Open();
+
+                            SqlDataReader reader = command.ExecuteReader();
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    pointtype = reader.GetString(0);
+                                }
+                            }
+                            reader.Close();
+
+                        }
+                    }
+
+                    if (pointtype == "digital")
+                    {
+                        using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                        {
+                            using (SqlCommand command = new SqlCommand(mlvaluedigitalquery, connection))
+                            {
+
+                                if (connection.State == ConnectionState.Closed)
+                                    connection.Open();
+
+                                using (var reader = command.ExecuteReader())
+                                    return reader.Cast<IDataRecord>()
+                                        .Select(x => new ValueData()
+                                        {
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
+                                        }).ToList();
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                        {
+                            using (SqlCommand command = new SqlCommand(mlvaluequery, connection))
+                            {
+
+                                if (connection.State == ConnectionState.Closed)
+                                    connection.Open();
+
+                                using (var reader = command.ExecuteReader())
+                                    return reader.Cast<IDataRecord>()
+                                        .Select(x => new ValueData
+                                        {
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
+                                        }).ToList();
+
+                            }
+                        }
+                    }
+
                 case "JWRTPMS":
                     using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                     {
@@ -279,6 +386,22 @@ namespace PIWebAPI.Controllers
         [Route("streams/Recorded/")]
         public IEnumerable<RecordedData> PostRecorded(Recorded Recorded)
         {
+            string mltypequery = @"SELECT *
+                                             FROM OPENQUERY([MLRTPMS], '
+                                                                        SELECT [pointtypex] 
+                                                                        FROM pipoint..classic 
+                                                                        WHERE [tag] = ''" + Recorded.tag + "''')";
+            string mlrecordeddigitalquery = @"SELECT * 
+                                                        FROM OPENQUERY([MLRTPMS], '
+                                                                                   SELECT [time], DIGSTRING(status) [value]
+                                                                                   FROM piarchive..picomp
+                                                                                   WHERE [tag] = ''" + Recorded.tag + "'' AND [time] BETWEEN ''" + Recorded.starttime + "'' AND ''" + Recorded.endtime + "''')";
+
+            string mlrecordedquery = @"SELECT * 
+                                                 FROM OPENQUERY([MLRTPMS], '
+                                                                            SELECT [time], [value]
+                                                                            FROM piarchive..picomp
+                                                                            WHERE[tag] = ''" + Recorded.tag + "'' AND[time] BETWEEN ''" + Recorded.starttime + "'' AND ''" + Recorded.endtime + "''')";
 
             string jwtypequery = @"SELECT *
                                              FROM OPENQUERY([JWRTPMS], '
@@ -316,6 +439,72 @@ namespace PIWebAPI.Controllers
 
             switch (Recorded.server.ToUpper())
             {
+                case "MLRTPMS":
+                    using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                    {
+                        using (SqlCommand command = new SqlCommand(mltypequery, connection))
+                        {
+
+                            if (connection.State == ConnectionState.Closed)
+                                connection.Open();
+
+                            SqlDataReader reader = command.ExecuteReader();
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    pointtype = reader.GetString(0);
+                                }
+                            }
+                            reader.Close();
+
+                        }
+                    }
+
+                    if (pointtype == "digital")
+                    {
+                        using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                        {
+                            using (SqlCommand command = new SqlCommand(mlrecordeddigitalquery, connection))
+                            {
+
+                                if (connection.State == ConnectionState.Closed)
+                                    connection.Open();
+
+                                using (var reader = command.ExecuteReader())
+                                    return reader.Cast<IDataRecord>()
+                                        .Select(x => new RecordedData()
+                                        {
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
+                                        }).ToList();
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
+                        {
+                            using (SqlCommand command = new SqlCommand(mlrecordedquery, connection))
+                            {
+
+                                if (connection.State == ConnectionState.Closed)
+                                    connection.Open();
+
+                                using (var reader = command.ExecuteReader())
+                                    return reader.Cast<IDataRecord>()
+                                        .Select(x => new RecordedData()
+                                        {
+                                            Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
+                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                        }).ToList();
+
+                            }
+                        }
+
+                    }
+
                 case "JWRTPMS":
                     using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["PIOLEDB"].ConnectionString))
                     {
