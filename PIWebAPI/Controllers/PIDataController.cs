@@ -400,7 +400,7 @@ namespace PIWebAPI.Controllers
             string mlrecordedquery = @"SELECT * 
                                                  FROM OPENQUERY([MLRTPMS], '
                                                                             SELECT [time], [value]
-                                                                            FROM piarchive..picomp
+                                                                            FROM piarchive..picomp2
                                                                             WHERE[tag] = ''" + Recorded.tag + "'' AND[time] BETWEEN ''" + Recorded.starttime + "'' AND ''" + Recorded.endtime + "''')";
 
             string jwtypequery = @"SELECT *
@@ -417,7 +417,7 @@ namespace PIWebAPI.Controllers
             string jwrecordedquery = @"SELECT * 
                                                  FROM OPENQUERY([JWRTPMS], '
                                                                             SELECT [time], [value]
-                                                                            FROM piarchive..picomp
+                                                                            FROM piarchive..picomp2
                                                                             WHERE[tag] = ''" + Recorded.tag + "'' AND[time] BETWEEN ''" + Recorded.starttime + "'' AND ''" + Recorded.endtime + "''')";
 
             string lytypequery = @"SELECT *
@@ -434,7 +434,7 @@ namespace PIWebAPI.Controllers
             string lyrecordedquery = @"SELECT * 
                                                  FROM OPENQUERY([LYRTPMS], '
                                                                             SELECT [time], [value]
-                                                                            FROM piarchive..picomp
+                                                                            FROM piarchive..picomp2
                                                                             WHERE[tag] = ''" + Recorded.tag + "'' AND[time] BETWEEN ''" + Recorded.starttime + "'' AND ''" + Recorded.endtime + "''')";
 
             switch (Recorded.server.ToUpper())
@@ -497,7 +497,7 @@ namespace PIWebAPI.Controllers
                                         .Select(x => new RecordedData()
                                         {
                                             Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
                                         }).ToList();
 
                             }
@@ -563,7 +563,7 @@ namespace PIWebAPI.Controllers
                                         .Select(x => new RecordedData()
                                         {
                                             Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
                                         }).ToList();
 
                             }
@@ -629,7 +629,7 @@ namespace PIWebAPI.Controllers
                                         .Select(x => new RecordedData()
                                         {
                                             Timestamp = x.GetDateTime(0).ToString("yyyy-MM-dd HH:mm:ss"),
-                                            Value = x.IsDBNull(1) == true ? null : x.GetDouble(1).ToString()
+                                            Value = x.IsDBNull(1) == true ? null : x.GetString(1).ToString()
                                         }).ToList();
 
                             }
