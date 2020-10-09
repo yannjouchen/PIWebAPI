@@ -500,6 +500,13 @@
             <param name="Value"></param>
             <returns>ValueData</returns>
         </member>
+        <member name="M:PIWebAPI.Controllers.PIDataController.multitagValue(PIWebAPI.Controllers.Value)">
+            <summary>
+            取得複數 PI 點位即時數據
+            </summary>
+            <param name="Value"></param>
+            <returns>multitagValueData</returns>
+        </member>
         <member name="M:PIWebAPI.Controllers.PIDataController.PostRecorded(PIWebAPI.Controllers.Recorded)">
             <summary>
             取得 PI 點位歷史數據

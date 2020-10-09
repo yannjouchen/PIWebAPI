@@ -216,6 +216,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Attributes.cs" />
+    <Compile Include="Models\multitagValueData.cs" />
     <Compile Include="Models\RecordedData.cs" />
     <Compile Include="Models\ValueData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
